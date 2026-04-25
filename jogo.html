@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <title>Jogo da Velha</title>
+    <style>
+        td {
+            width: 100px;
+            height: 100px;
+            text-align: center;
+            font-size: 48px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+        td:hover { background-color: #f0f0f0; }
+        table { border-collapse: collapse; }
+    </style>
+</head>
+<body>
+    <h1>Jogo da Velha</h1>
+    <p>Você é: <strong>{{ simbolo }}</strong></p>
+
+    <div id="tabuleiro">
+        <table border="1">
+            <tr>
+                <td id="celula0" onclick="fazerJogada(0)"></td>
+                <td id="celula1" onclick="fazerJogada(1)"></td>
+                <td id="celula2" onclick="fazerJogada(2)"></td>
+            </tr>
+            <tr>
+                <td id="celula3" onclick="fazerJogada(3)"></td>
+                <td id="celula4" onclick="fazerJogada(4)"></td>
+                <td id="celula5" onclick="fazerJogada(5)"></td>
+            </tr>
+            <tr>
+                <td id="celula6" onclick="fazerJogada(6)"></td>
+                <td id="celula7" onclick="fazerJogada(7)"></td>
+                <td id="celula8" onclick="fazerJogada(8)"></td>
+            </tr>
+        </table>
+    </div>
+
+    <br>
+    <a href="/"><button>Reiniciar Jogo</button></a>
+
+    <script>
+        // Pega o símbolo enviado pelo Flask
+        const playerSymbol = "{{ simbolo }}";
+        const computerSymbol = playerSymbol === 'X' ? 'O' : 'X';
+        let gameBoard = ['', '', '', '', '', '', '', '', ''];
+        let gameActive = true;
+        let vezDoJogador = true;
+        let proximoAIniciar = 'X';
+
+        const winningConditions = [
+            [0,1,2],[3,4,5],[6,7,8],
+            [0,3,6],[1,4,7],[2,5,8],
+            [0,4,8],[2,4,6]
+        ];
+
+        function fazerJogada(celula) {
+            if (!gameActive || !vezDoJogador || gameBoard[celula] !== '') return;
+            gameBoard[celula] = playerSymbol;
+            document.getElementById(`celula${celula}`).textContent = playerSymbol;
+            if (verificarVencedor(playerSymbol)) { finalizarJogo('Você venceu!'); return; }
+            if (gameBoard.every(cell => cell !== '')) { finalizarJogo('Empate!'); return; }
+            vezDoJogador = false;
+            setTimeout(jogadaComputador, 500);
+        }
+
+        function jogadaComputador() {
+            const livres = gameBoard.map((c,i) => c===''?i:null).filter(i=>i!==null);
+            const celula = livres[Math.floor(Math.random() * livres.length)];
+            gameBoard[celula] = computerSymbol;
+            document.getElementById(`celula${celula}`).textContent = computerSymbol;
+            if (verificarVencedor(computerSymbol)) { finalizarJogo('Computador venceu!'); return; }
+            if (gameBoard.every(cell => cell !== '')) { finalizarJogo('Empate!'); return; }
+            vezDoJogador = true;
+        }
+
+        function verificarVencedor(simbolo) {
+            return winningConditions.some(c => c.every(i => gameBoard[i] === simbolo));
+        }
+
+        function finalizarJogo(mensagem) {
+            gameActive = false;
+            setTimeout(() => {
+                const jogarNovamente = confirm(mensagem + '\n\nDeseja jogar novamente?');
+                if (jogarNovamente) window.location.href = '/';
+            }, 100);
+        }
+
+        // Se computador começa (quando jogador escolhe O)
+        if (playerSymbol === 'O') {
+            vezDoJogador = false;
+            setTimeout(jogadaComputador, 500);
+        }
+    </script>
+</body>
+</html>
